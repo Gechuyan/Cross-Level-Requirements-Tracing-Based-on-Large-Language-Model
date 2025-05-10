@@ -133,3 +133,127 @@
 | TinyLlama-1.1B-llama-Lora         | 84.91%   | 85.03%    | 84.91% | 84.97%   | TinyLlama-1.1B-llama-Lora         | 68.66%   | 47.15%    | 68.66% | 55.91%   | TinyLlama-1.1B-llama-Lora         | 60.16%   | 36.20%    | 60.16% | 45.20%   | TinyLlama-1.1B-llama-Lora         | 60.16%   | 36.20%    | 60.16% | 45.20%   |
 | TinyLlama-1.1B-llama-P-Tuning     | 41.89%   | 56.08%    | 41.89% | 47.96%   | TinyLlama-1.1B-llama-P-Tuning     | 68.66%   | 47.15%    | 68.66% | 55.91%   | TinyLlama-1.1B-llama-P-Tuning     | 60.16%   | 36.20%    | 60.16% | 45.20%   | TinyLlama-1.1B-llama-P-Tuning     | 60.16%   | 36.20%    | 60.16% | 45.20%   |
 | TinyLlama-1.1B-llama-PromptTuning | 60.75%   | 66.27%    | 60.75% | 63.39%   | TinyLlama-1.1B-llama-PromptTuning | 75.12%   | 76.98%    | 75.12% | 75.69%   | TinyLlama-1.1B-llama-PromptTuning | 60.16%   | 36.20%    | 60.16% | 45.20%   | TinyLlama-1.1B-llama-PromptTuning | 59.62%   | 53.73%    | 59.62% | 47.99%   |
+
+
+
+
+
+
+
+
+# RQ4.2:
+To assess the sensitivity of LLMs to data augmentation, we apply various augmentation techniques to six individual project datasets. These techniques include random synonym replacement, machine translation, random deletion, and random swapping as noise injection strategies. For each project, we generate five different augmented data groups along with the original dataset, resulting in a total of 30 data groups. We then use LLaMA models of different scales (1.1B, 7B, and 13B) to make predictions on these datasets, aiming to analyze the models' performance under different data augmentation conditions.
+
+For each original requirement pair $r$, we generate four augmented variants $\{r_1, r_2, r_3, r_4\}$ using different augmentation techniques. Along with the original instance $r_0$, we obtain five versions $\{r_0, r_1, r_2, r_3, r_4\}$.
+
+LLaMA models are  used to predict the traceability label $L(r_i) \in \{\text{traceable}, \text{non-traceable}\}$ for each version. A ``same label'' case is defined as one in which all five versions receive the same prediction:
+
+
+We define the `SameLabel` function for a requirement $r$ as follows:
+
+$$
+\text{SameLabel}(r) = 
+\begin{cases}
+1, & \text{if } L(r_0) = L(r_1) = L(r_2) = L(r_3) = L(r_4) \\
+0, & \text{otherwise}
+\end{cases}
+$$
+
+We then compute the total number of such cases in the group:
+
+$$
+\text{TotalSameLabelCount}(TSLC) = \sum_{i=1}^{N} \text{SameLabel}(r^{(i)})
+$$
+
+
+where $N$ is the number of original requirement pairs in this group. This metric reflects whether the semantic changes introduced by augmentation are sufficient to alter the model's prediction, thus serving as an indirect measure of diversity introduced by the augmentation process.
+
+| Model | Reslt of Original Dataset |    | Synonym Replacement |     | Machine Translation |     | Noising-based methods |     |     |     | TSLC |
+|-------|---------------------------|----|---------------------|-----|---------------------|-----|-----------------------|-----|-----|-----|------|
+|       |                           |    |                     |     |                     |     |                       | RD  |     | RWS |      |     |
+|       |                           |    |                     | 0   | 1                   | 0   | 1                     | 0   | 1   | 0   | 1    |     |
+| CM1   | TiniLlama                 | TP | 78                  | 42  | 36                  | 10  | 68                    | 56  | 22  | 15  | 63   | 6   |
+|       |                           | FN | 283                 | 171 | 112                 | 38  | 245                   | 166 | 117 | 63  | 220  | 19  |
+|       |                           | TN | 381                 | 215 | 166                 | 67  | 314                   | 239 | 142 | 73  | 308  | 3   |
+|       |                           | FP | 148                 | 83  | 65                  | 23  | 125                   | 93  | 55  | 35  | 113  | 3   |
+|       | 7B-Llama                  | TP | 34                  | 3   | 31                  | 8   | 26                    | 2   | 32  | 11  | 23   | 17  |
+|       |                           | FN | 327                 | 20  | 307                 | 65  | 262                   | 13  | 314 | 82  | 245  | 0   |
+|       |                           | TN | 445                 | 37  | 408                 | 115 | 330                   | 23  | 422 | 103 | 342  | 1   |
+|       |                           | FP | 84                  | 9   | 75                  | 19  | 65                    | 4   | 80  | 19  | 65   | 45  |
+|       | 13B-Llama                 | TP | 287                 | 254 | 33                  | 261 | 26                    | 91  | 196 | 25  | 262  | 2   |
+|       |                           | FN | 74                  | 61  | 13                  | 65  | 9                     | 27  | 47  | 9   | 65   | 0   |
+|       |                           | TN | 75                  | 60  | 15                  | 63  | 12                    | 28  | 47  | 10  | 65   | 5   |
+|       |                           | FP | 454                 | 395 | 59                  | 401 | 53                    | 152 | 302 | 33  | 421  | 2   |
+| Modis | TiniLlama                 | TP | 25                  | 0   | 25                  | 1   | 24                    | 2   | 23  | 2   | 23   | 21  |
+|       |                           | FN | 0                   | 0   | 0                   | 0   | 0                     | 0   | 0   | 0   | 0    | 0   |
+|       |                           | TN | 73                  | 0   | 73                  | 1   | 72                    | 0   | 73  | 7   | 66   | 66  |
+|       |                           | FP | 0                   | 0   | 0                   | 0   | 0                     | 0   | 0   | 0   | 0    | 0   |
+|       | 7B-Llama                  | TP | 10                  | 0   | 10                  | 0   | 10                    | 2   | 8   | 10  | 0    | 0   |
+|       |                           | FN | 15                  | 0   | 15                  | 0   | 15                    | 1   | 14  | 13  | 2    | 0   |
+|       |                           | TN | 50                  | 0   | 23                  | 3   | 20                    | 4   | 19  | 19  | 4    | 1   |
+|       |                           | FP | 23                  | 1   | 49                  | 2   | 48                    | 3   | 47  | 48  | 2    | 1   |
+|       | 13B-Llama                 | TP | 25                  | 0   | 25                  | 2   | 23                    | 0   | 25  | 1   | 24   | 22  |
+|       |                           | FN | 0                   | 0   | 0                   | 0   | 0                     | 0   | 0   | 0   | 0    | 0   |
+|       |                           | TN | 73                  | 0   | 73                  | 0   | 73                    | 1   | 72  | 1   | 72   | 72  |
+|       |                           | FP | 0                   | 0   | 0                   | 0   | 0                     | 0   | 0   | 0   | 0    | 0   |
+| GANNT | TiniLlama                 | TP | 37                  | 2   | 35                  | 8   | 29                    | 37  | 0   | 27  | 10   | 0   |
+|       |                           | FN | 31                  | 0   | 31                  | 8   | 23                    | 0   | 31  | 27  | 4    | 0   |
+|       |                           | TN | 71                  | 3   | 68                  | 21  | 50                    | 68  | 3   | 53  | 18   | 1   |
+|       |                           | FP | 65                  | 3   | 62                  | 22  | 43                    | 63  | 2   | 43  | 22   | 0   |
+|       | 7B-Llama                  | TP | 20                  | 7   | 13                  | 11  | 9                     | 20  | 0   | 0   | 20   | 0   |
+|       |                           | FN | 48                  | 27  | 21                  | 20  | 28                    | 46  | 2   | 0   | 48   | 0   |
+|       |                           | TN | 40                  | 19  | 21                  | 27  | 13                    | 39  | 1   | 1   | 39   | 0   |
+|       |                           | FP | 96                  | 40  | 56                  | 50  | 46                    | 96  | 0   | 2   | 94   | 1   |
+|       | 13B-Llama                 | TP | 27                  | 5   | 22                  | 8   | 19                    | 4   | 23  | 10  | 17   | 14  |
+|       |                           | FN | 41                  | 26  | 15                  | 34  | 7                     | 33  | 8   | 32  | 9    | 17  |
+|       |                           | TN | 63                  | 19  | 44                  | 23  | 40                    | 13  | 50  | 20  | 43   | 23  |
+|       |                           | FP | 73                  | 55  | 18                  | 60  | 13                    | 59  | 14  | 56  | 17   | 34  |
+| WARC  | TiniLlama                 | TP | 38                  | 25  | 13                  | 2   | 36                    | 5   | 33  | 3   | 35   | 13  |
+|       |                           | FN | 98                  | 52  | 46                  | 4   | 94                    | 7   | 91  | 5   | 93   | 0   |
+|       |                           | TN | 34                  | 23  | 11                  | 0   | 34                    | 1   | 33  | 2   | 32   | 11  |
+|       |                           | FP | 97                  | 48  | 49                  | 13  | 84                    | 6   | 91  | 9   | 88   | 0   |
+|       | 7B-Llama                  | TP | 20                  | 14  | 6                   | 17  | 3                     | 19  | 1   | 16  | 4    | 0   |
+|       |                           | FN | 116                 | 29  | 87                  | 109 | 87                    | 111 | 5   | 43  | 73   | 9   |
+|       |                           | TN | 23                  | 12  | 11                  | 13  | 10                    | 21  | 2   | 21  | 2    | 0   |
+|       |                           | FP | 108                 | 22  | 86                  | 105 | 3                     | 101 | 7   | 47  | 61   | 6   |
+|       | 13B-Llama                 | TP | 112                 | 8   | 104                 | 18  | 94                    | 8   | 104 | 16  | 96   | 70  |
+|       |                           | FN | 24                  | 11  | 13                  | 11  | 13                    | 13  | 11  | 11  | 13   | 0   |
+|       |                           | TN | 116                 | 13  | 103                 | 11  | 105                   | 9   | 107 | 9   | 107  | 82  |
+|       |                           | FP | 15                  | 8   | 7                   | 4   | 11                    | 12  | 3   | 8   | 7    | 1   |
+| CCHIT | TiniLlama                 | TP | 94                  | 0   | 92                  | 1   | 93                    | 5   | 89  | 10  | 84   | 79  |
+|       |                           | FN | 7                   | 7   | 0                   | 1   | 6                     | 1   | 6   | 1   | 6    | 5   |
+|       |                           | TN | 140                 | 5   | 135                 | 6   | 134                   | 7   | 133 | 12  | 128  | 118 |
+|       |                           | FP | 11                  | 0   | 11                  | 0   | 11                    | 1   | 10  | 3   | 8    | 0   |
+|       | 7B-Llama                  | TP | 1                   | 0   | 1                   | 1   | 0                     | 0   | 1   | 0   | 1    | 0   |
+|       |                           | FN | 100                 | 94  | 6                   | 32  | 68                    | 93  | 7   | 18  | 82   | 3   |
+|       |                           | TN | 0                   | 0   | 0                   | 0   | 0                     | 0   | 0   | 0   | 0    | 0   |
+|       |                           | FP | 151                 | 139 | 12                  | 59  | 92                    | 138 | 11  | 28  | 123  | 9   |
+|       | 13B-Llama                 | TP | 30                  | 9   | 21                  | 11  | 19                    | 9   | 21  | 8   | 22   | 10  |
+|       |                           | FN | 71                  | 54  | 17                  | 62  | 9                     | 61  | 10  | 37  | 34   | 25  |
+|       |                           | TN | 35                  | 8   | 27                  | 16  | 19                    | 7   | 28  | 15  | 20   | 9   |
+|       |                           | FP | 116                 | 87  | 29                  | 95  | 21                    | 90  | 26  | 77  | 39   | 46  |
+| IP    | TiniLlama                 | TP | 66                  | 0   | 66                  | 2   | 64                    | 1   | 65  | 2   | 64   | 61  |
+|       |                           | FN | 0                   | 0   | 0                   | 0   | 0                     | 0   | 0   | 0   | 0    | 0   |
+|       |                           | TN | 98                  | 1   | 97                  | 4   | 94                    | 0   | 98  | 1   | 97   | 92  |
+|       |                           | FP | 1                   | 0   | 1                   | 0   | 1                     | 1   | 0   | 0   | 1    | 0   |
+|       | 7B-Llama                  | TP | 22                  | 16  | 6                   | 9   | 13                    | 20  | 2   | 0   | 22   | 0   |
+|       |                           | FN | 44                  | 32  | 12                  | 7   | 37                    | 34  | 10  | 1   | 43   | 0   |
+|       |                           | TN | 40                  | 22  | 18                  | 15  | 25                    | 31  | 9   | 0   | 40   | 1   |
+|       |                           | FP | 59                  | 41  | 18                  | 11  | 48                    | 45  | 14  | 1   | 58   | 0   |
+|       | 13B-Llama                 | TP | 60                  | 12  | 48                  | 5   | 55                    | 3   | 57  | 8   | 52   | 37  |
+|       |                           | FN | 6                   | 4   | 2                   | 1   | 5                     | 3   | 3   | 3   | 3    | 0   |
+|       |                           | TN | 75                  | 15  | 60                  | 4   | 71                    | 3   | 72  | 16  | 59   | 50  |
+|       |                           | FP | 24                  | 15  | 9                   | 6   | 18                    | 17  | 7   | 7   | 17   | 2   |
+
+
+The experimental results are shown in Table, which presents the prediction performance of 1.1B,7B and 13B LLaMA models under different data augmentation strategies.
+In more than 68% of the experiments, fewer than 10 samples per experiment yield identical predictions across the four data augmentation strategies and the original dataset. This suggests that models do not always treat augmented data as equivalent to the original, leading to notable variations in prediction outcomes.
+
+In the Modis dataset, due to its small size, both the TinyLLaMA and 13B models exhibit cases where no false negatives (FN) or false positives (FP) are observed, meaning all instances are classified as having a traceability relationship. Similarly, in the CCHIT dataset, the 7B model predicts only one instance as traceable, while all other samples are categorized as non-traceable.
+
+Further analysis shows that increasing the model size does not always improve its ability to distinguish between original and augmented data. For our first research question (RQ1), the 7B LLaMA model performs the best, yet it demonstrates the weakest ability to recognize augmented data. For instance, in the CM1 dataset, approximately half of the predictions in the TP (true positive) and FP (false positive) categories remain unchanged before and after augmentation, while for other datasets, this number is typically below 10%.
+
+Additionally, in the 13B LLaMA model experiments, the prediction distribution for augmented data closely mirrors that of the original data. This model demonstrates the strongest ability to differentiate between augmented and original samples. However, even at this scale, the predictions before and after augmentation remain inconsistent in most cases. This suggests that while data augmentation increases dataset diversity, models do not always fully absorb the augmented variations. As a result, their ability to detect subtle differences remains limited.
+
+Overall, our study demonstrates that data augmentation has a significant impact on the predictive performance of LLMs, and different models exhibit varying levels of adaptability to augmented data.  
+Moreover, this suggests that, for most datasets, the three LLMs are not sufficiently robust when handling diverse or perturbed inputs, thereby underscoring the necessity of our fine-tuning approach.
